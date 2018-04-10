@@ -5,7 +5,7 @@ Command line utility that executes a command (plaintext or encryted) as another 
 - Wait option : wait for passed command to terminate and return its errorlevel
 - Hide option : hide the window create by command
 - RunAS option : like runas.exe but password is a parameter, no admin rights needed, no service used
-- Command line parameters can be encrypted into a string
+- Command line parameters can be encrypted into a string using AES-CBC-128 encryption algorithm
 - Multi-instance execution
 - Interactif mode is using current active user session either console or remote desktop session
 - Windows 7 and Windows 10 32/64bits supported

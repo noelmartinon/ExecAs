@@ -128,9 +128,14 @@
 
 #define SERVICE_NAME        "ProcessAU" // Process As User
 
+// Encryption values used is AES-CBC-128 :
+// - For CBC mode, the initialization vector (IV) is the size of a block, which for AES is 16 bytes (128 bits)
+// - The key size is 16 bytes (128 bits) for AES-CBC-128
+#define BLOCK_SIZE  16
+#define IV_SIZE     16
+#define KEY_SIZE    16
+
 #define CHECK_SIZE 8
-#define IV_SIZE 16
-#define BLOCK_SIZE 16
 
 int argc_dynamic = 0;
 char **argv_dynamic = NULL;
@@ -999,8 +1004,8 @@ char *Encrypt(char *data, int length)
 
     CRijndael oRijndael;
     strcpy(IV, oRijndael.GenerateIV(IV_SIZE)); // IV Salt
-    strcpy(KEY, oRijndael.GenerateIV(BLOCK_SIZE)); // Rand Key
-    oRijndael.MakeKey(KEY, IV, BLOCK_SIZE, IV_SIZE);
+    strcpy(KEY, oRijndael.GenerateIV(KEY_SIZE)); // Rand Key
+    oRijndael.MakeKey(KEY, IV, KEY_SIZE, IV_SIZE);
 
     memcpy(p_dataIn, data, length);
     oRijndael.Encrypt(p_dataIn, p_dataOut, totalbytes, CRijndael::CBC); // using p_dataIn because oRijndael.Encrypt need totalbytes to be a multiple of blockSize
@@ -1009,12 +1014,12 @@ char *Encrypt(char *data, int length)
     char checksum[CHECK_SIZE+1]={0}; // string to check decoded string integrity
     memcpy(checksum, b64enc, CHECK_SIZE);
 
-    int cryptCmd_length = totalbytes + IV_SIZE + BLOCK_SIZE + CHECK_SIZE;
+    int cryptCmd_length = totalbytes + IV_SIZE + KEY_SIZE + CHECK_SIZE;
     char *p_cryptCmd=new char[cryptCmd_length];
     memcpy(p_cryptCmd, checksum, CHECK_SIZE);
     memcpy(p_cryptCmd + CHECK_SIZE, IV, IV_SIZE);
-    memcpy(p_cryptCmd + CHECK_SIZE + IV_SIZE, KEY, BLOCK_SIZE);
-    memcpy(p_cryptCmd + CHECK_SIZE + IV_SIZE + BLOCK_SIZE, p_dataOut, totalbytes);
+    memcpy(p_cryptCmd + CHECK_SIZE + IV_SIZE, KEY, KEY_SIZE);
+    memcpy(p_cryptCmd + CHECK_SIZE + IV_SIZE + KEY_SIZE, p_dataOut, totalbytes);
 
     b64enc=b64.Encode(p_cryptCmd, cryptCmd_length);
 
@@ -1046,24 +1051,24 @@ char *Decrypt(char *encrypted, int *out_len = NULL)
     if (out_len) *out_len = 0;
 
     char *b64dec=b64.Decode(encrypted, strlen(encrypted), &output_len);
-    if (!b64dec || output_len <= CHECK_SIZE + IV_SIZE + BLOCK_SIZE ) return NULL;
+    if (!b64dec || output_len <= CHECK_SIZE + IV_SIZE + KEY_SIZE ) return NULL;
 
     char checksum[CHECK_SIZE+1]={0}; // string to check decoded string integrity
     memcpy(checksum, b64dec, CHECK_SIZE);
     memcpy(IV, b64dec + CHECK_SIZE, IV_SIZE);
-    memcpy(KEY, b64dec + CHECK_SIZE + IV_SIZE, BLOCK_SIZE);
-    data = b64dec + CHECK_SIZE + IV_SIZE + BLOCK_SIZE;
+    memcpy(KEY, b64dec + CHECK_SIZE + IV_SIZE, KEY_SIZE);
+    data = b64dec + CHECK_SIZE + IV_SIZE + KEY_SIZE;
 
     for ( int i = 0; i < CHECK_SIZE; i++)
         if( b64dec[i] != checksum[i] ) return NULL;
 
-    totalbytes = output_len - CHECK_SIZE - IV_SIZE - BLOCK_SIZE;
+    totalbytes = output_len - CHECK_SIZE - IV_SIZE - KEY_SIZE;
     if (totalbytes%BLOCK_SIZE != 0) return NULL;
     ret_decrypted=new char[totalbytes];
     memset(ret_decrypted,0,totalbytes);
 
     CRijndael oRijndael;
-    oRijndael.MakeKey(KEY, IV, BLOCK_SIZE, IV_SIZE);
+    oRijndael.MakeKey(KEY, IV, KEY_SIZE, IV_SIZE);
     oRijndael.Decrypt(data, ret_decrypted, totalbytes, CRijndael::CBC);
 
     if (out_len) *out_len = totalbytes;
