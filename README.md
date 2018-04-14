@@ -3,7 +3,7 @@ Command line utility that executes a command (plaintext or encryted) as another 
 
 ## Feature summary
 - Wait option : wait for passed command to terminate and return its errorlevel
-- Hide option : hide the window create by command
+- Hide option : hide the window created by command
 - RunAS option : like runas.exe but password is a parameter, no admin rights needed, no service used
 - Command line parameters can be encrypted into a string using AES-128-CBC encryption algorithm
 - Multi-instance execution
