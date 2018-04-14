@@ -966,16 +966,6 @@ HRESULT GrantDesktopAccess(HANDLE hToken)
     return E_UNEXPECTED;
 }
 //---------------------------------------------------------------------------
-bool FileExist(char *filename)
-{
-    if (!filename || !filename[0]) return false;
-    WIN32_FIND_DATA FindFileData;
-    HANDLE handle = FindFirstFile(filename, &FindFileData) ;
-    bool found = (handle != INVALID_HANDLE_VALUE && FindFileData.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY);
-    if(found) FindClose(handle);
-    return found;
-}
-//---------------------------------------------------------------------------
 bool CopyToClipBoard(char *text)
 {
     if (!text | !text[0]) return false;
