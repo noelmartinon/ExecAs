@@ -5,14 +5,14 @@ Command line utility that executes a command (plaintext or encryted) as another 
 - Wait option : wait for passed command to terminate and return its errorlevel
 - Hide option : hide the window create by command
 - RunAS option : like runas.exe but password is a parameter, no admin rights needed, no service used
-- Command line parameters can be encrypted into a string using AES-CBC-128 encryption algorithm
+- Command line parameters can be encrypted into a string using AES-128-CBC encryption algorithm
 - Multi-instance execution
 - Interactif mode is using current active user session either console or remote desktop session
 - Windows 7 and Windows 10 32/64bits supported
 
 ## Usage
   ```
-  ExecAs.exe - Version 1.0.0
+  ExecAs.exe - Version 1.1.0
   MIT License / Copyright (C) 2018 Noël Martinon
 
   Use:
@@ -46,12 +46,15 @@ Command line utility that executes a command (plaintext or encryted) as another 
 
   If using (-n) parameter then it must be the first argument or the one that follows (-c)
 
+  'Encrypted_Parameters' can be a path to a text file that strickly contains the encrypted command
+
   Examples:
   ExecAs.exe -s prog.exe
   ExecAs.exe -i -w prog.exe arg1 arg2
   ExecAs.exe -e cmd /c "dir c: && pause"
   ExecAs.exe -c -e prog.exe arg
   ExecAs.exe NnRMNy8zTEHq0vv/csDxVZ1gsiqGUIGuppzB12K3HnfYvPue6+UcM/lLsGjRmdt0BmXfETUy5IaIVQliK1UOa74zuXwzi687
+  ExecAs.exe encrypted_cmd.txt
   ExecAs.exe -r -u"user1" -p"pass1" -d prog.exe arg1
   ExecAs.exe -a"{731A63AF-2990-11D1-B12E-00C04FC2F56F}" prog.exe
   ExecAs.exe -c -n -r -uadministrator -padminpasswd -ddomain -w -h wmic product where \"name like 'Java%'\" call uninstall /nointeractive
@@ -69,7 +72,8 @@ No license or restriction was found with that source code so, unless otherwise s
 /!\ NOT SECURE /!\
 
 Since this source code is public it's easy to use the decrypt() function to get the plaintext from encrypted string and potentially retrieve a password passed as an argument !
---> So modify the 2 functions encrypt() and decrypt() to your own code to increase security (get password from workgroup, change checksum size...)
+
+So modify the 2 functions encrypt() and decrypt() to your own code to increase security (get password from workgroup, change checksum size...)
 
 /!\ NOT SECURE /!\
 

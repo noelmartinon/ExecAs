@@ -48,11 +48,12 @@
 // /!\ NOT SECURE /!\
 // Since this source code is public it's easy to use the decrypt() function to get
 // the plaintext from encrypted string and potentially retrieve a password passed as an argument !
-// --> So modify the 2 functions encrypt() and decrypt() to your own code to increase security <--
-// /!\ !!!!!!!!!! /!\
+//
+// So modify the 2 functions encrypt() and decrypt() to your own code to increase security (get password from workgroup, change checksum size...)
+// /!\ NOT SECURE /!\
 //
 //
-// ExecAs.exe - Version 1.0.0
+// ExecAs.exe - Version 1.1.0
 // MIT License / Copyright (C) 2018 Noël Martinon
 //
 // Use:
@@ -86,12 +87,15 @@
 //
 // If using (-n) parameter then it must be the first argument or the one that follows (-c)
 //
+// 'Encrypted_Parameters' can be a path to a text file that strickly contains the encrypted command
+//
 // Examples:
 // ExecAs.exe -s prog.exe
 // ExecAs.exe -i -w prog.exe arg1 arg2
 // ExecAs.exe -e cmd /c "dir c: && pause"
 // ExecAs.exe -c -e prog.exe arg
 // ExecAs.exe NnRMNy8zTEHq0vv/csDxVZ1gsiqGUIGuppzB12K3HnfYvPue6+UcM/lLsGjRmdt0BmXfETUy5IaIVQliK1UOa74zuXwzi687
+// ExecAs.exe encrypted_cmd.txt
 // ExecAs.exe -r -u"user1" -p"pass1" -d prog.exe arg1
 // ExecAs.exe -a"{731A63AF-2990-11D1-B12E-00C04FC2F56F}" prog.exe
 // ExecAs.exe -c -n -r -uadministrator -padminpasswd -ddomain -w -h wmic product where \"name like 'Java%'\" call uninstall /nointeractive
@@ -99,7 +103,7 @@
 //
 //
 /////////////////////////////////////////////////////////////
-#define APP_VERSION "1.0.0"
+#define APP_VERSION "1.1.0"
 
 #define _WIN32_WINNT 0x0A00
 #include <windows.h>
@@ -128,9 +132,9 @@
 
 #define SERVICE_NAME        "ProcessAU" // Process As User
 
-// Encryption values used is AES-CBC-128 :
+// Encryption used is AES-128-CBC :
 // - For CBC mode, the initialization vector (IV) is the size of a block, which for AES is 16 bytes (128 bits)
-// - The key size is 16 bytes (128 bits) for AES-CBC-128
+// - The key size is 16 bytes (128 bits) for AES-128-CBC
 #define BLOCK_SIZE  16
 #define IV_SIZE     16
 #define KEY_SIZE    16
@@ -398,12 +402,14 @@ void PrintUsageAndQuit()
           "\nOnly (-c) and (-r) parameters do not need admin permissions to run ExecAs.exe\n"
           "\nIf using (-c) parameter then it must be the first argument\n"
           "\nIf using (-n) parameter then it must be the first argument or the one that follows (-c)\n"
+          "\n'Encrypted_Parameters' can be a path to a text file that strickly contains the encrypted command\n"
           "\nExamples:\n"
           "ExecAs.exe -s prog.exe\n"
           "ExecAs.exe -i -w prog.exe arg1 arg2\n"
           "ExecAs.exe -e cmd /c \"dir c: && pause\"\n"
           "ExecAs.exe -c -e prog.exe arg\n"
           "ExecAs.exe NnRMNy8zTEHq0vv/csDxVZ1gsiqGUIGuppzB12K3HnfYvPue6+UcM/lLsGjRmdt0BmXfETUy5IaIVQliK1UOa74zuXwzi687\n"
+          "ExecAs.exe encrypted_cmd.txt\n"
           "ExecAs.exe -r -u\"user1\" -p\"pass1\" -d prog.exe arg1\n"
           "ExecAs.exe -a\"{731A63AF-2990-11D1-B12E-00C04FC2F56F}\" prog.exe\n"
           "ExecAs.exe -c -n -r -uadministrator -padminpasswd -ddomain -w -h wmic product where \\\"name like 'Java%'\\\" call uninstall /nointeractive");
@@ -960,26 +966,36 @@ HRESULT GrantDesktopAccess(HANDLE hToken)
     return E_UNEXPECTED;
 }
 //---------------------------------------------------------------------------
+bool FileExist(char *filename)
+{
+    if (!filename || !filename[0]) return false;
+    WIN32_FIND_DATA FindFileData;
+    HANDLE handle = FindFirstFile(filename, &FindFileData) ;
+    bool found = (handle != INVALID_HANDLE_VALUE && FindFileData.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY);
+    if(found) FindClose(handle);
+    return found;
+}
+//---------------------------------------------------------------------------
 bool CopyToClipBoard(char *text)
 {
-  if (!text | !text[0]) return false;
-  DWORD len;
-  HGLOBAL hgbl;
-  char temp[MAX_PATH];
-  char *pmem;
-
-  len = strlen(text);
-  hgbl = GlobalAlloc(GHND, len + 1);
-  if(!hgbl) return false;
-  pmem = (char*)GlobalLock(hgbl);
-  strcpy(pmem,text);
-  GlobalUnlock(hgbl);
-  OpenClipboard(NULL);
-  EmptyClipboard();
-  SetClipboardData(CF_TEXT, hgbl);
-  CloseClipboard();
-
-  return true;
+    if (!text | !text[0]) return false;
+    DWORD len;
+    HGLOBAL hgbl;
+    char temp[MAX_PATH];
+    char *pmem;
+  
+    len = strlen(text);
+    hgbl = GlobalAlloc(GHND, len + 1);
+    if(!hgbl) return false;
+    pmem = (char*)GlobalLock(hgbl);
+    strcpy(pmem,text);
+    GlobalUnlock(hgbl);
+    OpenClipboard(NULL);
+    EmptyClipboard();
+    SetClipboardData(CF_TEXT, hgbl);
+    CloseClipboard();
+  
+    return true;
 }
 //---------------------------------------------------------------------------
 char *Encrypt(char *data, int length)
@@ -1330,15 +1346,39 @@ int main(int argc, char *argv[])
         return 0;
     }
     //
-    // Case using encrypted argument string then decrypt __argv__ and try to execution command
+    // Case using encrypted argument string then decrypt __argv__ and try to execute command
     //
     else if (__argc__ == 2)
     {
-        if (!IsBase64String(__argv__[1])) PrintUsageAndQuit();
-
-        char *decoded_str = Decrypt(__argv__[1]);
         int index = 0; // index of arguments in __argv__
         int len = 0; // length of each __argv__
+        char *decoded_str = NULL;
+
+        // Get base64 string from argv1 or from file pointed by argv1
+        if (IsBase64String(__argv__[1]))
+            decoded_str = Decrypt(__argv__[1]);
+        else
+        {
+          FILE *fp = fopen(__argv__[1], "r");
+          if (fp) {
+              fseek(fp, 0, SEEK_END);
+              long size = ftell(fp);
+              if (size<MAX_CMD_LEN) {
+                  fseek(fp, 0, SEEK_SET);
+                  char *fdata = new char[size+1];
+                  fread(fdata, 1, size, fp);
+                  fdata[size]=0;
+                  if (!IsBase64String(fdata)) {
+                      delete[] fdata;
+                      fclose(fp);
+                      PrintUsageAndQuit();
+                  }
+                  decoded_str = Decrypt(fdata);
+                  delete[] fdata;
+              }
+              fclose(fp);
+          }
+        }
 
         if (!decoded_str) PrintUsageAndQuit();
 
