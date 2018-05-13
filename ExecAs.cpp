@@ -57,7 +57,7 @@
 // MIT License / Copyright (C) 2018 Noël Martinon
 //
 // Use:
-// ExecAs.exe [-c[rypt]] [-i[nteractive]|-e[xclusive]]|-s[ystem]] |
+// ExecAs.exe [-c[rypt]] [-n[oconsole]] [-i[nteractive]|-e[xclusive]]|-s[ystem]] |
 // [[-r[unas]] -u"UserName" -d"DomainName" -p"Password"] | [-a"AppID"] [-w[ait]] [-h[ide]] Command | Encrypted_Parameters
 //
 // -c           encrypt the arguments into an 'Encrypted_Parameters' string copied
@@ -75,11 +75,11 @@
 //              authenticated user according to userName,domainName,password
 // -r -u -d -p  process will be launched as RUNAS command in the current
 //              session according to userName,domainName,password
-// -w           wait option for Command to terminate
-// -h           hide window option created by launched process (THIS IS NOT
+// -w           wait for Command to terminate
+// -h           hide window created by launched process (THIS IS NOT
 //              AVAILABLE WITH '-s' PARAMETER)
 // Command must begin with the process (path to the exe file) to launch
-// Either (-s) or (-i) or (-e) or (-a) or (-u -d -p) or (-r -u -d -p) with optional (-c)(-w)(-h) parameters or single 'Encrypted_Parameters' must supplied
+// Either (-s) or (-i) or (-e) or (-a) or (-u -d -p) or (-r -u -d -p) with optional (-c)(-n)(-w)(-h) parameters or single 'Encrypted_Parameters' must supplied
 //
 // Only (-c) and (-r) parameters do not need admin permissions to run ExecAs.exe
 //
@@ -394,11 +394,11 @@ void PrintUsageAndQuit()
           "             authenticated user according to userName,domainName,password\n"
           "-r -u -d -p  process will be launched as RUNAS command in the current\n"
           "             session according to userName,domainName,password\n"
-          "-w           wait option for Command to terminate\n"
-          "-h           hide window option created by launched process (NOT AVAILABLE\n"
+          "-w           wait for Command to terminate\n"
+          "-h           hide option created by launched process (NOT AVAILABLE\n"
           "             WITH '-s' PARAMETER)\n"
           "Command must begin with the process (path to the exe file) to launch\n"
-          "\nEither (-s) or (-i) or (-e) or (-a) or (-u -d -p) or (-r -u -d -p) with optional (-c)(-w)(-h) parameters or single 'Encrypted_Parameters' must supplied\n"
+          "\nEither (-s) or (-i) or (-e) or (-a) or (-u -d -p) or (-r -u -d -p) with optional (-c)(-n)(-w)(-h) parameters or single 'Encrypted_Parameters' must supplied\n"
           "\nOnly (-c) and (-r) parameters do not need admin permissions to run ExecAs.exe\n"
           "\nIf using (-c) parameter then it must be the first argument\n"
           "\nIf using (-n) parameter then it must be the first argument or the one that follows (-c)\n"
@@ -412,7 +412,8 @@ void PrintUsageAndQuit()
           "ExecAs.exe encrypted_cmd.txt\n"
           "ExecAs.exe -r -u\"user1\" -p\"pass1\" -d prog.exe arg1\n"
           "ExecAs.exe -a\"{731A63AF-2990-11D1-B12E-00C04FC2F56F}\" prog.exe\n"
-          "ExecAs.exe -c -n -r -uadministrator -padminpasswd -ddomain -w -h wmic product where \\\"name like 'Java%'\\\" call uninstall /nointeractive");
+          "ExecAs.exe -c -n -r -uadministrator -padminpasswd -ddomain -w -h wmic product where \\\"name like 'Java%'\\\" call uninstall /nointeractive\n"
+          "ExecAs.exe -i -w -h ExecAs.exe -r -u\"user1\" -p\"pass1\" -d prog.exe arg1");
 }
 //---------------------------------------------------------------------------
 void* GetAdminSid()

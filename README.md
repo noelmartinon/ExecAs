@@ -16,29 +16,30 @@ Command line utility that executes a command (plaintext or encryted) as another 
   MIT License / Copyright (C) 2018 Noël Martinon
 
   Use:
-  ExecAs.exe [-c[rypt]] [-i[nteractive]|-e[xclusive]]|-s[ystem]] |
-  [[-r[unas]] -u"UserName" -d"DomainName" -p"Password"] | [-a"AppID"] [-w[ait]] [-h[ide]] Command | Encrypted_Parameters
+  ExecAs.exe [-c[rypt]] [-n[oconsole]] [-i[nteractive]|-e[xclusive]]|-s[ystem]] |
+  [[-r[unas]] -u"UserName" -d"DomainName" -p"Password"] |
+  [-a"AppID"] [-w[ait]] [-h[ide]] Command | Encrypted_Parameters
 
   -c           encrypt the arguments into an 'Encrypted_Parameters' string copied
                to clipboard that can be passed as single command parameter
   -n           hide the console window associated with ExecAs.exe (NOT
                AVAILABLE WITH '-c' PARAMETER). Useful in a shortcut;)
   -i           process will be launched under credentials of the
-               \"Interactive User\" if it exists otherwise as local system
+               "Interactive User" if it exists otherwise as local system
   -e           process will be launched under credentials of the
-               \"Interactive User\" ONLY if it exists
+               "Interactive User" ONLY if it exists
   -a           process will be launched under credentials of the user
-               specified in \"RunAs\" parameter of AppID
+               specified in "RunAs" parameter of AppID
   -s           process will be launched as local system
   -u -d -p     process will be launched on the result token session of the
                authenticated user according to userName,domainName,password
   -r -u -d -p  process will be launched as RUNAS command in the current
                session according to userName,domainName,password
-  -w           wait option for Command to terminate
-  -h           hide window option created by launched process (THIS IS NOT
-               AVAILABLE WITH '-s' PARAMETER)
+  -w           wait for Command to terminate
+  -h           hide window created by launched process (NOT AVAILABLE
+               WITH '-s' PARAMETER)
   Command must begin with the process (path to the exe file) to launch
-  Either (-s) or (-i) or (-e) or (-a) or (-u -d -p) or (-r -u -d -p) with optional (-c)(-w)(-h) parameters or single 'Encrypted_Parameters' must supplied
+  Either (-s) or (-i) or (-e) or (-a) or (-u -d -p) or (-r -u -d -p) with optional (-c)(-n)(-w)(-h) parameters or single 'Encrypted_Parameters' must supplied
 
   Only (-c) and (-r) parameters do not need admin permissions to run ExecAs.exe
 
